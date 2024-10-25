@@ -1,7 +1,7 @@
 <template>
     <div id="game-container">
       <h1>เกม OX</h1>
-      <div id="score">คะแนน: {{ playerScore }}</div>
+      <div id="score" class="pt-2 pb-2">คะแนน: {{ playerScore }}</div>
       <div id="board">
         <div
           v-for="(cell, index) in board"
@@ -12,19 +12,36 @@
           {{ cell }}
         </div>
       </div>
-      <button @click="restartGame">เริ่มเกมใหม่</button>
+      <button @click="restartGame" class="mt-3 me-3">เริ่มเกมใหม่</button>
+      <button @click="handleSignOut" class="mt-3" v-if="isLoggedIn">Sign out</button>
       <div id="message">{{ message }}</div>
     </div>
   </template>
   
   <script setup>
-  import { ref } from 'vue';
-  
+  import { ref, onMounted } from 'vue';
+  import {getAuth, onAuthStateChanged, signOut} from "firebase/auth"
+  import { useRouter } from "vue-router";
+
   const playerScore = ref(0);
   const consecutiveWins = ref(0);
   const board = ref(Array(9).fill(''));
   const gameActive = ref(true);
   const message = ref('');
+  const isLoggedIn = ref(false)
+  const router = useRouter()
+
+  let auth;
+  onMounted(() =>{
+    auth = getAuth()
+    onAuthStateChanged(auth,(user) =>{
+      if(user){
+        isLoggedIn.value = true
+      } else{
+        isLoggedIn.value = false
+      }
+    })
+  })
   
   const winningConditions = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -97,6 +114,12 @@
     gameActive.value = true;
     message.value = '';
   };
+
+  const handleSignOut = () => {
+    signOut(auth).then(() =>{
+      router.push('/')
+    })
+  } 
   
   </script>
   

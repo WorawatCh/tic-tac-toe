@@ -1,9 +1,9 @@
 <script setup>
-import Game from './Game.vue';
+import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <Game />
+  <RouterView />
 </template>
 
 <style scoped>
