@@ -22,6 +22,8 @@
   import { ref, onMounted } from 'vue';
   import {getAuth, onAuthStateChanged, signOut} from "firebase/auth"
   import { useRouter } from "vue-router";
+  import {useUserStore} from '../stores/user'
+  import axios from 'axios'
 
   const playerScore = ref(0);
   const consecutiveWins = ref(0);
@@ -30,18 +32,35 @@
   const message = ref('');
   const isLoggedIn = ref(false)
   const router = useRouter()
+  const userStore = useUserStore()
 
   let auth;
   onMounted(() =>{
     auth = getAuth()
     onAuthStateChanged(auth,(user) =>{
       if(user){
+        console.log('user',user)
+        console.log('useUserStore',userStore.userList)
         isLoggedIn.value = true
       } else{
         isLoggedIn.value = false
       }
     })
+    // getScore()
   })
+
+  // const getScore = async () =>{
+  //   const response = await axios.get(`https://671b5f142c842d92c37f9c6f.mockapi.io/scores`)
+  //   console.log('response',response.data)
+  // }
+
+  // const setScore = async(point) =>{
+  //   const request = {
+  //     score: point
+  //   }
+  //   const response = await axios.post(`https://671b5f142c842d92c37f9c6f.mockapi.io/scores`,request)
+  //   console.log('point',response.data)
+  // }
   
   const winningConditions = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -91,6 +110,7 @@
         consecutiveWins.value = 0; // รีเซ็ตการนับการชนะ
         message.value = 'คุณแพ้!'; // ตั้งข้อความว่าผู้เล่นแพ้
       }
+      setScore(playerScore.value)
       return; // ออกจากฟังก์ชัน
     }
   

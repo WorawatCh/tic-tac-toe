@@ -3,6 +3,7 @@ import './style.css'
 import App from './App.vue'
 import router from './router';
 import 'bootstrap/dist/css/bootstrap.css'
+import { createPinia } from 'pinia'
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -18,11 +19,13 @@ const firebaseConfig = {
   messagingSenderId: "1039036914865",
   appId: "1:1039036914865:web:76c8815b130bab5c78d690"
 };
+const pinia = createPinia()
 
 // Initialize Firebase
 initializeApp(firebaseConfig);
 
 const app = createApp(App);
 app.use(router);
+app.use(pinia)
 app.mount('#app');
 
