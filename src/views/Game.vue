@@ -1,7 +1,8 @@
 <template>
     <div id="game-container">
       <h1>เกม OX</h1>
-      <div id="score" class="pt-2 pb-2">คะแนน: {{ playerScore }}</div>
+      <h2>สวัสดี {{ userStore.currentUser?.name }}</h2>
+      <div id="score" class="pt-2 pb-2">คะแนน: {{ userStore.currentUser?.score }}</div>
       <div id="board">
         <div
           v-for="(cell, index) in board"
@@ -25,7 +26,6 @@
   import {useUserStore} from '../stores/user'
   import axios from 'axios'
 
-  const playerScore = ref(0);
   const consecutiveWins = ref(0);
   const board = ref(Array(9).fill(''));
   const gameActive = ref(true);
@@ -35,32 +35,25 @@
   const userStore = useUserStore()
 
   let auth;
-  onMounted(() =>{
+  onMounted(async () =>{
     auth = getAuth()
-    onAuthStateChanged(auth,(user) =>{
+    await userStore.getAllUser()
+    onAuthStateChanged(auth,async (user) =>{
       if(user){
-        console.log('user',user)
-        console.log('useUserStore',userStore.userList)
+        const existingUser = userStore.users.find(u => u.uid === user.uid);
+        await userStore.fetchCurrentUser(existingUser.id);
+        console.log('userStore.currentUser',userStore.currentUser)
         isLoggedIn.value = true
       } else{
         isLoggedIn.value = false
       }
     })
-    // getScore()
   })
 
-  // const getScore = async () =>{
-  //   const response = await axios.get(`https://671b5f142c842d92c37f9c6f.mockapi.io/scores`)
-  //   console.log('response',response.data)
-  // }
 
-  // const setScore = async(point) =>{
-  //   const request = {
-  //     score: point
-  //   }
-  //   const response = await axios.post(`https://671b5f142c842d92c37f9c6f.mockapi.io/scores`,request)
-  //   console.log('point',response.data)
-  // }
+  const setScore = async(point) =>{
+    await userStore.setScore(point)
+  }
   
   const winningConditions = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -98,19 +91,19 @@
     if (roundWon) { // ถ้ามีการชนะ
       gameActive.value = false; // หยุดเกม
       if (winner === 'X') { // ตรวจสอบว่าผู้เล่นชนะ
-        playerScore.value++; // เพิ่มคะแนนให้ผู้เล่น
+        userStore.currentUser.score++; // เพิ่มคะแนนให้ผู้เล่น
         consecutiveWins.value++; // เพิ่มการชนะติดต่อกัน
         message.value = 'คุณชนะ!'; // ตั้งข้อความว่าผู้เล่นชนะ
         if (consecutiveWins.value === 3) { // ถ้าชนะ 3 ครั้งติดต่อกัน
-          playerScore.value++; // เพิ่มคะแนนพิเศษ
+          userStore.currentUser.score++; // เพิ่มคะแนนพิเศษ
           consecutiveWins.value = 0; // รีเซ็ตการนับ
         }
       } else if (winner === 'O') { // ถ้าบอทชนะ
-        playerScore.value--; // ลดคะแนนของผู้เล่น
+        userStore.currentUser.score--; // ลดคะแนนของผู้เล่น
         consecutiveWins.value = 0; // รีเซ็ตการนับการชนะ
         message.value = 'คุณแพ้!'; // ตั้งข้อความว่าผู้เล่นแพ้
       }
-      setScore(playerScore.value)
+      setScore(userStore.currentUser.score)
       return; // ออกจากฟังก์ชัน
     }
   
@@ -136,7 +129,8 @@
   };
 
   const handleSignOut = () => {
-    signOut(auth).then(() =>{
+    signOut(auth).then(async () =>{
+      await userStore.clearCurrentUser();
       router.push('/')
     })
   } 
