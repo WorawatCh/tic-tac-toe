@@ -8,7 +8,7 @@ export const useUserStore = defineStore('user',{
     }),
     actions: {
         async setScore(point){
-            this.currentUser.score = point
+            this.currentUser.score += point
             try {
                 const response =  await axios.put(`https://671b5f142c842d92c37f9c6f.mockapi.io/user/${this.currentUser.id}`,this.currentUser)
                 this.currentUser.score = response.data.score
@@ -25,6 +25,7 @@ export const useUserStore = defineStore('user',{
         async createUser(user){
             try {
                 const response =  await axios.post("https://671b5f142c842d92c37f9c6f.mockapi.io/user",user)
+                this.currentUser={}
                 this.currentUser.uid = response.data.uid
                 this.currentUser.score = 0
                 this.currentUser.name = response.data.name

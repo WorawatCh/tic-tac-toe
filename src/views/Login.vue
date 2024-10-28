@@ -18,15 +18,12 @@ onMounted(async () => {
     .then(async (result) => {
       const existingUser = userStore.users.find(u => u.uid === result.user.uid);
       if (existingUser) {
-      // ถ้ามีข้อมูลผู้ใช้ ให้ตั้งค่าผู้ใช้คนปัจจุบัน
-      await userStore.setCurrentUser(existingUser);
-      console.log('Logged in user:', userStore.currentUser);
+      userStore.setCurrentUser(existingUser);
     } else {
-      // ถ้าไม่มีข้อมูลผู้ใช้ ให้สร้างผู้ใช้ใหม่
       const newUser = {
         uid: result.user.uid,
         name: result.user.displayName,
-        score: 0, // ตั้งค่าคะแนนเริ่มต้น
+        score: 0, 
       };
       await userStore.createUser(newUser);
     }

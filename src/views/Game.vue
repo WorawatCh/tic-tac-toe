@@ -2,8 +2,9 @@
     <div id="game-container">
       <h1>เกม OX</h1>
       <h2>สวัสดี {{ userStore.currentUser?.name }}</h2>
-      <div id="score" class="pt-2 pb-2">คะแนน: {{ userStore.currentUser?.score }}</div>
-      <div id="board">
+      <div id="score" class="pt-2 pb-2">คะแนนสะสม: {{ userStore.currentUser?.score }}</div>
+      <div id="score" class="pt-2 pb-2">คะแนน: {{ playerScore}}</div>
+      <div id="board"> 
         <div
           v-for="(cell, index) in board"
           :key="index"
@@ -24,7 +25,6 @@
   import {getAuth, onAuthStateChanged, signOut} from "firebase/auth"
   import { useRouter } from "vue-router";
   import {useUserStore} from '../stores/user'
-  import axios from 'axios'
 
   const consecutiveWins = ref(0);
   const board = ref(Array(9).fill(''));
@@ -33,6 +33,7 @@
   const isLoggedIn = ref(false)
   const router = useRouter()
   const userStore = useUserStore()
+  const playerScore = ref(0);
 
   let auth;
   onMounted(async () =>{
@@ -41,6 +42,7 @@
     onAuthStateChanged(auth,async (user) =>{
       if(user){
         const existingUser = userStore.users.find(u => u.uid === user.uid);
+        console.log('existingUser',existingUser)
         await userStore.fetchCurrentUser(existingUser.id);
         console.log('userStore.currentUser',userStore.currentUser)
         isLoggedIn.value = true
@@ -64,52 +66,53 @@
   const handleCellClick = (index) => {
     if (board.value[index] !== '' || !gameActive.value) return;
   
-    // ผู้เล่นวาง X ลงไปในช่องที่เลือก
     board.value[index] = 'X';
     checkResult();
   
-    // ถ้าเกมยังดำเนินอยู่ให้บอทเล่น
     if (gameActive.value) {
       botPlay();
     }
   };
   
   const checkResult = () => {
-    let roundWon = false; // ตัวแปรบ่งชี้ว่ามีการชนะหรือไม่
-    let winner = null; // ตัวแปรสำหรับเก็บผู้ชนะ ('X' หรือ 'O')
+    let roundWon = false; 
+    let winner = null;
   
-    for (let condition of winningConditions) { // วนลูปผ่านเงื่อนไขการชนะ
-      const [a, b, c] = condition.map(index => board.value[index]); // เอาค่าจากบอร์ดที่เกี่ยวข้อง
-      if (a === '' || b === '' || c === '') continue; // ถ้ามีช่องว่างให้ข้ามไป
-      if (a === b && b === c) { // ถ้าทั้งสามช่องมีค่าเท่ากัน
-        roundWon = true; // มีการชนะ
-        winner = a; // กำหนดผู้ชนะ
-        break; // ออกจากลูป
+    for (let condition of winningConditions) { 
+      const [a, b, c] = condition.map(index => board.value[index]);
+      if (a === '' || b === '' || c === '') continue; 
+      if (a === b && b === c) { 
+        roundWon = true;
+        winner = a; 
+        break;
       }
     }
   
-    if (roundWon) { // ถ้ามีการชนะ
-      gameActive.value = false; // หยุดเกม
-      if (winner === 'X') { // ตรวจสอบว่าผู้เล่นชนะ
-        userStore.currentUser.score++; // เพิ่มคะแนนให้ผู้เล่น
-        consecutiveWins.value++; // เพิ่มการชนะติดต่อกัน
-        message.value = 'คุณชนะ!'; // ตั้งข้อความว่าผู้เล่นชนะ
-        if (consecutiveWins.value === 3) { // ถ้าชนะ 3 ครั้งติดต่อกัน
-          userStore.currentUser.score++; // เพิ่มคะแนนพิเศษ
-          consecutiveWins.value = 0; // รีเซ็ตการนับ
+    if (roundWon) { 
+      gameActive.value = false;
+      if (winner === 'X') { 
+        playerScore.value++; 
+        consecutiveWins.value++; 
+        message.value = 'คุณชนะ!'; 
+        setScore(1)
+        if (consecutiveWins.value === 3) { 
+          playerScore.value++;
+          setScore(1)
+          consecutiveWins.value = 0; 
         }
-      } else if (winner === 'O') { // ถ้าบอทชนะ
-        userStore.currentUser.score--; // ลดคะแนนของผู้เล่น
-        consecutiveWins.value = 0; // รีเซ็ตการนับการชนะ
-        message.value = 'คุณแพ้!'; // ตั้งข้อความว่าผู้เล่นแพ้
+      } else if (winner === 'O') { 
+        playerScore.value--; 
+        consecutiveWins.value = 0;
+        message.value = 'คุณแพ้!';
+        setScore(-1)
       }
-      setScore(userStore.currentUser.score)
-      return; // ออกจากฟังก์ชัน
+      
+      return;
     }
   
-    if (!board.value.includes('')) { // ตรวจสอบว่าไม่มีช่องว่างในบอร์ด
-      message.value = 'เสมอ!'; // ตั้งข้อความว่าผลเสมอ
-      gameActive.value = false; // หยุดเกม
+    if (!board.value.includes('')) {
+      message.value = 'เสมอ!';
+      gameActive.value = false;
     }
   };
   
@@ -117,7 +120,7 @@
     const availableCells = board.value.map((cell, index) => (cell === '' ? index : null)).filter(val => val !== null);
     if (availableCells.length > 0) {
       const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
-      board.value[randomIndex] = 'O'; // บอทวาง O
+      board.value[randomIndex] = 'O';
       checkResult();
     }
   };
@@ -146,6 +149,7 @@
     display: grid;
     grid-template-columns: repeat(3, 100px);
     grid-gap: 5px;
+    place-content: center;
   }
   
   .cell {
