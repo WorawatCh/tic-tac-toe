@@ -1,5 +1,21 @@
-# Vue 3 + Vite
+# Tic-tac-toe
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A game in which two players alternately put Xs and Os in compartments of a figure formed by two vertical lines crossing two horizontal lines and each tries to get a row of three Xs or three Os before the opponent does
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Installation
+
+Clone this repository and use npm to hadle package
+
+```bash
+# clone repository
+git clone 'This repository url'
+
+# enter directory
+cd 'this project directory'
+
+# install package
+npm install
+
+# run
+npm run dev
+```
